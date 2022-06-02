@@ -2,8 +2,6 @@ var canvas = document.getElementById("snakeCanvas");
 var context = canvas.getContext("2d");
 var score = document.getElementById("score");
 var startBtn = document.getElementById("startBtn");
-var pauseBtn = document.getElementById("pauseBtn");
-var resumeBtn = document.getElementById("resumeBtn");
 var fruit = document.getElementById("fruit");
 var virus = document.getElementById("virus");
 var snakeHeadX, snakeHeadY, fruitX, fruitY, virusX, virusY, tail, totalTail, directionVar, direction, previousDir,wallX,wallY;
@@ -41,10 +39,9 @@ function reset() {
     ySpeed = 0;
     snakeHeadX = 0;
     snakeHeadY = 0;
-    pauseBtn.style.backgroundColor="#fff";
-    resumeBtn.style.backgroundColor="#fff";
     playing=false, gameStarted=false;
     boundaryCollision=false;
+
 }
 function leverUp() {
     clearInterval(gameInterval);
@@ -68,71 +65,61 @@ function startGame() {
     main();
 }
 
-function pauseGame() {
-    window.clearInterval(gameInterval);
-    window.clearInterval(virusInterval);
-    pauseBtn.style.backgroundColor="#ccc";
-    resumeBtn.style.backgroundColor="#fff";
-    playing=false;
-}
-
-function resumeGame() {
-    main();
-    pauseBtn.style.backgroundColor="#fff";
-    resumeBtn.style.backgroundColor="#ccc";
-    playing=true;
-}
 window.addEventListener("keydown", pressedKey);
-pauseBtn.addEventListener("click", pauseGame);
-resumeBtn.addEventListener("click", resumeGame);
-function pressedKey() {
-    if(event.keyCode===32  && gameStarted) {
-        if(playing) {
-            pauseGame();
-        }
-        else{
-            resumeGame();
-        }
-    }
-    else {
+function pressedKey(event) {
+    previousDir = direction;
+    directionVar=event.keyCode;
+    directionVar = event.key.replace("Arrow", "");
+    changeDirection();
+
+}
+function pressedKey(event) {
         previousDir = direction;
-        directionVar = event.key.replace("Arrow", "");
+        directionVar=event.keyCode;
+        directionVar = event.key.replace();
         changeDirection();
-    }
+
 }
 
 //đổi hướng theo mũi tên dc nhấn
 function changeDirection() {
     switch (directionVar) {
-        case "Up":
-            if (previousDir !== "Down") {
+        case "ArrowUp":
+            if (previousDir != "ArrowDown") {
                 direction=directionVar;
                 xSpeed = 0;
                 ySpeed = scale * -speed;
             }
             break;
 
-        case "Down":
-            if (previousDir !== "Up") {
+        case "ArrowDown":
+            if (previousDir !== "ArrowUp") {
                 direction=directionVar;
                 xSpeed = 0;
                 ySpeed = scale * speed;
             }
             break;
 
-        case "Left":
-            if (previousDir !== "Right") {
+        case "ArrowLeft":
+            if (previousDir !== "ArrowRight") {
                 direction=directionVar;
                 xSpeed = scale * -speed;
                 ySpeed = 0;
             }
             break;
 
-        case "Right":
-            if (previousDir !== "Left") {
+        case "ArrowRight":
+            if (previousDir !== "ArrowLeft") {
                 direction=directionVar;
                 xSpeed = scale * speed;
                 ySpeed = 0;
+            }
+            break;
+        case "p":
+             {if(totalTail==0){
+                 direction=directionVar;
+                 xSpeed = 0;
+                 ySpeed = 0;}
             }
             break;
     }
@@ -211,12 +198,19 @@ function moveSnakeForward() {
     tail[totalTail - 1] = { tailX: snakeHeadX, tailY: snakeHeadY };
     snakeHeadX += xSpeed;
     snakeHeadY += ySpeed;
+    if(direction=="p"){
+        function pauseGame(){
+            return moveSnakeForward();
+        }
+    }
+}
+function pauseGame(){
+
 }
 
 
 //chỉ trong trường hợp va chạm ranh giới
-function moveSnakeBack()
-{
+function moveSnakeBack() {
     context.clearRect(0, 0, 500, 500);
     for (let i = tail.length-1; i >= 1; i--) {
         tail[i] = tail[i - 1];
@@ -286,6 +280,7 @@ function drawSnake1() {
             })
             modalBtn.addEventListener("click", ()=>{
                 context.clearRect(0, 0, 500, 500);
+
                 score.innerText = 0;
             });
         }, 1000);
@@ -321,6 +316,16 @@ function wallPositionLV5() {
         context.fillRect(wallX,wallY,scale,scale);
     }
 }
+function wallPositionLV6() {
+    xArray=[23,24,3,4,21,22,3,4,21,22,5,6,19,20,5,6,19,20,7,8,17,18,7,8,17,18,9,10,15,16,9,10,15,16,11,14,11,12,14,14,11,11,13,14,10,14,9 ,10,15,16,9 ,10,15,16,7 ,8 ,17,18,7 ,8 ,17,18,5 ,6 ,19,20,5 ,6 ,19,20,3 ,4 ,21,22,3 ,4 ,21,22,1 ,2 ,23,24,1 ,2 ,23,24];
+    yArray=[0 ,0 ,1,1,1 ,1 ,2,2,2 ,2 ,3,3 ,3,3 ,4,4,4 ,4 ,5,5,5 ,5 ,6,6,6 ,6 ,7,7 ,7 ,7 ,8,8 ,8 ,8 ,9 ,9 ,10,10,10,11,12,13,13,13,14,14,15,15,15,15,16,16,16,16,17,17,17,17,18,18,18,18,19,19,19,19,20,20,20,20,21,21,21,21,22,22,22,22,23,23,23,23,24,24,24,24];
+    for(let i=0;i<xArray.length && i<yArray.length;i++) {
+        wallX = xArray[i] * scale;
+        wallY = yArray[i] * scale;
+        context.fillStyle="pink";
+        context.fillRect(wallX,wallY,scale,scale);
+    }
+}
 
 //------------------------------------------------------VIRUS-----------------------------------------------------------//
 function virusPosition() {
@@ -346,9 +351,21 @@ function drawFruit() {
     context.drawImage(fruit, fruitX, fruitY, scale, scale);
 }
 //------------------------------------------------------MAIN GAME-----------------------------------------------------------//
+//thức ăn trùng với virus sẽ tạo virus mới
 function checkVirusPosition() {
     if(fruitX===virusX && fruitY===virusY) {
         virusPosition();
+    }
+
+}
+//nếu thức ăn hay virus sinh ra trùng với đuôi sẽ thức ăn hay virus cái mới
+function checkTailPosition() {
+    for(let i=0; i< tail.length; i++){
+        if(fruitX===tail[i].tailX && fruitY===tail[i].tailY)
+        {
+            fruitPosition();
+            break;
+        }
     }
     for(let i=0; i< tail.length; i++){
         if(virusX===tail[i].tailX && virusY===tail[i].tailY)
@@ -359,25 +376,16 @@ function checkVirusPosition() {
     }
 
 }
-function checkTailPosition() {
-    for(let i=0; i< tail.length; i++){
-        if(fruitX===tail[i].tailX && fruitY===tail[i].tailY)
-        {
+//nếu thức ăn hay virus sinh ra trùng tường sẽ tạo thức ăn hay virus mới
+function checkWallPosition(){
+    for(let i=0; i<xArray.length && i<yArray.length; i++){
+        if(fruitX===xArray[i] && fruitY===yArray[i]) {
             fruitPosition();
             break;
         }
     }
-}
-function checkWallPosition(){
     for(let i=0; i<xArray.length && i<yArray.length; i++){
-        if(fruitX===xArray[i] && fruitY===yArray[i]) {
-        fruitPosition();
-        break;
-        }
-    }
-    for(let i=0; i<xArray.length && i<yArray.length; i++){
-        if(virusX===xArray[i] && virusY===yArray[i])
-        {
+        if(virusX===xArray[i] && virusY===yArray[i]) {
             virusPosition();
             break;
         }
@@ -386,16 +394,14 @@ function checkWallPosition(){
 
 
 function main() {
-
-
     lv1();
     function lv1(){
         document.getElementById("level").innerHTML="level 1";
         gameInterval = window.setInterval(() => {
         context.clearRect(0, 0, 500, 500);
         checkTailPosition();
-        checkVirusPosition();
         checkWallPosition();
+        checkVirusPosition();
         drawFruit();
         moveSnakeForward();
         drawVirus();
@@ -403,18 +409,19 @@ function main() {
         if (snakeHeadX === fruitX && snakeHeadY === fruitY) {
             totalTail++;
             point++;
-        }if(point>=1 ){
+        }if(point>=2&&point<4 ){
+                clearInterval(gameInterval);
                 leverUp();
                 lv2();
                 virusPosition();
                 fruitPosition();
+
             }
         score.innerText = point;
     }, intervalDuration);
     }
     function lv2(){
         document.getElementById("level").innerHTML="level 2";
-
         virusInterval = window.setInterval(virusPosition, 10000);
         gameInterval = window.setInterval(() => {
             context.clearRect(0, 0, 500, 500);
@@ -428,7 +435,8 @@ function main() {
             if (snakeHeadX === fruitX && snakeHeadY === fruitY) {
                 totalTail++;
                 point++;}
-            if(point>=2){
+            if(point>=4){
+                clearInterval(gameInterval);
                 leverUp();
                 lv3();
                 fruitPosition();
@@ -443,9 +451,11 @@ function main() {
         virusInterval = window.setInterval(virusPosition, 10000);
         gameInterval = window.setInterval(() => {
             context.clearRect(0, 0, 500, 500);
+            wallPositionLV2();
             checkTailPosition();
             checkWallPosition();
-            wallPositionLV2();
+            checkVirusPosition();
+
             drawFruit();
             drawVirus();
             moveSnakeForward();
@@ -454,7 +464,8 @@ function main() {
             if (snakeHeadX === fruitX && snakeHeadY === fruitY) {
                 totalTail++;
                 point++;}
-            if(point>=3){
+            if(point>=6){
+                clearInterval(gameInterval);
                 leverUp();
                 lv4();
                 fruitPosition();
@@ -468,9 +479,10 @@ function main() {
         virusInterval = window.setInterval(virusPosition, 10000);
         gameInterval = window.setInterval(() => {
             context.clearRect(0, 0, 500, 500);
-            checkTailPosition();
-            checkWallPosition()
             wallPositionLV4();
+            checkTailPosition();
+            checkWallPosition();
+
             checkVirusPosition();
             drawFruit();
             drawVirus();
@@ -480,7 +492,8 @@ function main() {
             if (snakeHeadX === fruitX && snakeHeadY === fruitY) {
                 totalTail++;
                 point++;}
-            if(point>=4){
+            if(point>=8){
+                clearInterval(gameInterval);
             leverUp();
             lv5();
             fruitPosition();
@@ -493,10 +506,10 @@ function main() {
         virusInterval = window.setInterval(virusPosition, 10000);
         gameInterval = window.setInterval(() => {
             context.clearRect(0, 0, 500, 500);
+            wallPositionLV5();
             checkTailPosition();
             checkWallPosition();
             checkVirusPosition();
-            wallPositionLV5();
             drawFruit();
             drawVirus();
             moveSnakeForward();
@@ -504,10 +517,12 @@ function main() {
             if (snakeHeadX === fruitX && snakeHeadY === fruitY) {
                 totalTail++;
                 point++;}
-            if(point>=5){
+            if(point>=10){
+                clearInterval(gameInterval);
                 leverUp();
                 lv6();
                 fruitPosition();
+
             }
             score.innerText = point;
         }, intervalDuration);
@@ -518,10 +533,11 @@ function main() {
         virusInterval = window.setInterval(virusPosition, 10000);
         gameInterval = window.setInterval(() => {
             context.clearRect(0, 0, 500, 500);
+            wallPositionLV6();
             checkTailPosition();
             checkWallPosition();
             checkVirusPosition();
-            wallPositionLV5();
+
             drawFruit();
             drawVirus();
             moveSnakeForward();
